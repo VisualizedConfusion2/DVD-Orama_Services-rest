@@ -1,0 +1,6 @@
+@DVD_Orama_Services_rest_HostAddress = http://localhost:5178
+
+GET {{DVD_Orama_Services_rest_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
