@@ -2,5 +2,6 @@
 {
     public class UpdateMovieDto
     {
+        public string Barcode { get; set; } = string.Empty;
     }
 }

@@ -18,6 +18,7 @@ namespace DVD_Orama_Services_rest.Controllers
             _movieService = movieService;
         }
 
+        // GET api/moviecollection
         [HttpGet]
         public async Task<ActionResult<List<MovieDto>>> GetMyMovies()
         {
@@ -28,8 +29,22 @@ namespace DVD_Orama_Services_rest.Controllers
             return Ok(movies);
         }
 
+        // GET api/moviecollection/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<MovieDto>> GetMovieById(int id)
+        {
+            var userId = GetUserId();
+            if (userId == null) return Unauthorized();
+
+            var movie = await _movieService.GetMovieByIdAsync(userId.Value, id);
+            if (movie == null) return NotFound();
+
+            return Ok(movie);
+        }
+
+        // POST api/moviecollection
         [HttpPost]
-        public async Task<IActionResult> AddMovie([FromBody] AddMovieDto movieDto)
+        public async Task<ActionResult<MovieDto>> AddMovie([FromBody] AddMovieDto movieDto)
         {
             var userId = GetUserId();
             if (userId == null) return Unauthorized();
@@ -49,16 +64,48 @@ namespace DVD_Orama_Services_rest.Controllers
             }
         }
 
-        /// <summary>
-        /// Helper to extract the User ID from the JWT/Authentication claims
-        /// </summary>
+        // PUT api/moviecollection/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateMovie(int id, [FromBody] UpdateMovieDto movieDto)
+        {
+            var userId = GetUserId();
+            if (userId == null) return Unauthorized();
+
+            try
+            {
+                var updated = await _movieService.UpdateMovieAsync(userId.Value, id, movieDto.Barcode);
+                if (!updated) return NotFound();
+
+                return Ok(new { message = "Movie updated successfully." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while updating the movie.");
+            }
+        }
+
+        // DELETE api/moviecollection/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMovie(int id)
+        {
+            var userId = GetUserId();
+            if (userId == null) return Unauthorized();
+
+            var deleted = await _movieService.DeleteMovieAsync(userId.Value, id);
+            if (!deleted) return NotFound();
+
+            return NoContent();
+        }
+
         private int? GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int id))
-            {
                 return id;
-            }
             return null;
         }
     }

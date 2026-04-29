@@ -1,6 +1,10 @@
-﻿namespace DVD_Orama_Services_rest.Services
+﻿using DVD_Orama_Services_rest.Models.DTOs;
+
+namespace DVD_Orama_Services_rest.Services
 {
-    public class IAuthService
+    public interface IAuthService
     {
+        Task<AuthResponseDto?> RegisterAsync(RegisterDto dto);
+        Task<AuthResponseDto?> LoginAsync(LoginDto dto);
     }
 }
