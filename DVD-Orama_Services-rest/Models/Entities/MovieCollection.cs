@@ -3,9 +3,6 @@
     public class MovieCollectionItem
     {
         public int Id { get; set; }
-        //public string Barcode { get; set; } = string.Empty;
-
-        //public int UserId { get; set; }
         public User Owner { get; set; } = null!;
         public bool IsPublic { get; set; } = false;
         public List<Movie> Movies { get; set; }

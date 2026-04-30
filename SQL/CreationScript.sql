@@ -1,24 +1,77 @@
-DROP DATABASE IF EXISTS DVDOrama_DB;
-GO
-CREATE DATABASE DVDOrama_DB;
-GO
-USE DVDOrama_DB;
-GO
-
-CREATE TABLE Users(
-    Id INT IDENTITY(1,1) PRIMARY KEY,
-    Username NVARCHAR(100) NOT NULL UNIQUE,
-    PasswordHash NVARCHAR(255) NOT NULL
+﻿Create Table Movies(
+    MovieId     INT IDENTITY PRIMARY KEY NOT NULL,
+    Title       NVARCHAR(255) NOT NULL,
+    Description NVARCHAR(MAX) NOT NULL,
+    Duration    INT NOT NULL,
+    PublicationYear INT NOT NULL,
+    PosterURL   NVARCHAR(500) NOT NULL
 );
-GO
 
-CREATE TABLE MovieCollection (
-    Id INT IDENTITY(1,1) PRIMARY KEY,
-    Barcode NVARCHAR(50) NOT NULL,
-    UserId INT NOT NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    CONSTRAINT FK_MovieCollection_Users FOREIGN KEY (UserId)
-        REFERENCES Users(Id)
-        ON DELETE CASCADE
+Create Table Actors(
+    ActorId INT IDENTITY PRIMARY KEY NOT NULL,
+    Name    NVARCHAR(255) NOT NULL
 );
-GO
+
+Create Table MoviesActorMap(
+    ActorId INT NOT NULL,
+    MovieId INT NOT NULL,
+    FOREIGN KEY (ActorId) REFERENCES Actors(ActorId) ON DELETE CASCADE,
+    FOREIGN KEY (MovieId) REFERENCES Movies(MovieId) ON DELETE CASCADE,
+    PRIMARY KEY (MovieId, ActorId)
+);
+
+Create Table Genres(
+    GenreId INT IDENTITY PRIMARY KEY NOT NULL,
+    Genre   NVARCHAR(100) NOT NULL
+);
+
+Create Table MoviesGenresMap(
+    GenreId INT NOT NULL,
+    MovieId INT NOT NULL,
+    FOREIGN KEY (GenreId) REFERENCES Genres(GenreId) ON DELETE CASCADE,
+    FOREIGN KEY (MovieId) REFERENCES Movies(MovieId) ON DELETE CASCADE,
+    PRIMARY KEY (MovieId, GenreId)
+);
+
+Create Table MovieEAN(
+    EAN     BIGINT PRIMARY KEY NOT NULL,
+    MovieId INT NOT NULL,
+    FOREIGN KEY (MovieId) REFERENCES Movies(MovieId) ON DELETE CASCADE
+);
+
+Create Table StreamingAvailability(
+    StreamingServiceId   INT PRIMARY KEY IDENTITY NOT NULL,
+    StreamingServiceName NVARCHAR(255) NOT NULL,
+    URL                  NVARCHAR(500) NOT NULL,
+    MovieId              INT NOT NULL,
+    FOREIGN KEY (MovieId) REFERENCES Movies(MovieId) ON DELETE CASCADE
+);
+
+Create Table MovieCollections(
+    MovieCollectionId INT PRIMARY KEY IDENTITY NOT NULL,
+    Name     NVARCHAR(255) NOT NULL,
+    IsPublic BIT NOT NULL DEFAULT 0
+);
+
+Create Table MovieCollectionsMoviesMap(
+    MovieCollectionId INT NOT NULL,
+    MovieId           INT NOT NULL,
+    FOREIGN KEY (MovieCollectionId) REFERENCES MovieCollections(MovieCollectionId) ON DELETE CASCADE,
+    FOREIGN KEY (MovieId) REFERENCES Movies(MovieId) ON DELETE CASCADE,
+    PRIMARY KEY (MovieId, MovieCollectionId)
+);
+
+Create Table Users(
+    UserId      INT PRIMARY KEY IDENTITY NOT NULL,
+    Username    NVARCHAR(MAX) NOT NULL,
+    Email       NVARCHAR(MAX) NOT NULL
+);
+
+
+Create Table UserMovieCollectionMap(
+    UserId              INT NOT NULL,
+    MovieCollectionId   INT NOT NULL,
+    Role                NVARCHAR(255) NOT NULL,
+    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    FOREIGN KEY (MovieCollectionId) REFERENCES MovieCollections(MovieCollectionId),
+);
