@@ -1,4 +1,15 @@
-﻿Create Table Movies(
+﻿USE master;
+IF DB_ID('DvDOrama_DB') IS NOT NULL
+BEGIN
+    -- Force DB into single-user mode, rolling back any active connections
+    ALTER DATABASE [DvDOrama_DB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [DvDOrama_DB];
+END
+
+CREATE DATABASE DvDOrama_DB;
+USE DvDOrama_DB;
+
+Create Table Movies(
     MovieId     INT IDENTITY PRIMARY KEY NOT NULL,
     Title       NVARCHAR(255) NOT NULL,
     Description NVARCHAR(MAX) NOT NULL,
@@ -39,7 +50,7 @@ Create Table MovieEAN(
     FOREIGN KEY (MovieId) REFERENCES Movies(MovieId) ON DELETE CASCADE
 );
 
-Create Table StreamingAvailability(
+Create Table StreamingLocations(
     StreamingServiceId   INT PRIMARY KEY IDENTITY NOT NULL,
     StreamingServiceName NVARCHAR(255) NOT NULL,
     URL                  NVARCHAR(500) NOT NULL,
@@ -67,11 +78,16 @@ Create Table Users(
     Email       NVARCHAR(MAX) NOT NULL
 );
 
+Create Table Roles(
+    RoleId INT PRIMARY KEY IDENTITY NOT NULL,
+    RoleName NVARCHAR(255) NOT NULL
+);
+
 
 Create Table UserMovieCollectionMap(
     UserId              INT NOT NULL,
     MovieCollectionId   INT NOT NULL,
-    Role                NVARCHAR(255) NOT NULL,
-    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    RoleId                INT NOT NULL,
     FOREIGN KEY (MovieCollectionId) REFERENCES MovieCollections(MovieCollectionId),
+    FOREIGN KEY (RoleId) REFERENCES Roles(RoleId),
 );

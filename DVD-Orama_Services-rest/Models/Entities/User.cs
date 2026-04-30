@@ -1,11 +1,12 @@
-﻿namespace DVD_Orama_Services_rest.Models.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace DVD_Orama_Services_rest.Models.Entities
 {
     public class User
     {
-        public int Id { get; set; }
+        [Column("UserId")]  // ← explicitly maps to UserId in DB
+        public int Id { get; set; }  // ← matches DB column name
         public string Username { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
-
-        public ICollection<MovieCollectionItem> Movies { get; set; } = new List<MovieCollectionItem>();
+        public string Email { get; set; } = string.Empty;
     }
 }

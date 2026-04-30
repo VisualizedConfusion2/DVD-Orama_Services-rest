@@ -20,41 +20,41 @@ namespace DVD_Orama_Services_rest.Services
             _config = config;
         }
 
-        public async Task<AuthResponseDto?> RegisterAsync(RegisterDto dto)
-        {
-            if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
-                return null; // Username already taken
+        //public async Task<AuthResponseDto?> RegisterAsync(RegisterDto dto)
+        //{
+        //    if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
+        //        return null; // Username already taken
 
-            var user = new User
-            {
-                Username = dto.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
-            };
+        //    var user = new User
+        //    {
+        //        Username = dto.Username,
+        //        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+        //    };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+        //    _context.Users.Add(user);
+        //    await _context.SaveChangesAsync();
 
-            return new AuthResponseDto
-            {
-                Token = GenerateToken(user),
-                Username = user.Username
-            };
-        }
+        //    return new AuthResponseDto
+        //    {
+        //        Token = GenerateToken(user),
+        //        Username = user.Username
+        //    };
+        //}
 
-        public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
-            if (user == null) return null;
+        //public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
+        //{
+        //    var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
+        //    if (user == null) return null;
 
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                return null;
+        //    if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        //        return null;
 
-            return new AuthResponseDto
-            {
-                Token = GenerateToken(user),
-                Username = user.Username
-            };
-        }
+        //    return new AuthResponseDto
+        //    {
+        //        Token = GenerateToken(user),
+        //        Username = user.Username
+        //    };
+        //}
 
         private string GenerateToken(User user)
         {
