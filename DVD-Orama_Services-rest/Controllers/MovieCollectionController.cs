@@ -1,112 +1,86 @@
 ﻿using DVD_Orama_Services_rest.Models.DTOs;
-using DVD_Orama_Services_rest.Services;
-using Microsoft.AspNetCore.Authorization;
+using DVD_Orama_Services_rest.Repos.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace DVD_Orama_Services_rest.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class MovieCollectionController : ControllerBase
     {
-        private readonly IMovieCollectionService _movieService;
+        private readonly IMovieCollectionRepo _collectionRepo;
 
-        public MovieCollectionController(IMovieCollectionService movieService)
+        public MovieCollectionController(IMovieCollectionRepo collectionRepo)
         {
-            _movieService = movieService;
+            _collectionRepo = collectionRepo;
         }
 
         // GET api/moviecollection
         [HttpGet]
-        public async Task<ActionResult<List<MovieDto>>> GetMyMovies()
+        public async Task<ActionResult<List<MovieCollectionDto>>> GetAllCollections()
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
-
-            var movies = await _movieService.GetUserMoviesAsync(userId.Value);
-            return Ok(movies);
+            var collections = await _collectionRepo.GetAllCollectionsAsync(1);
+            return Ok(collections);
         }
 
         // GET api/moviecollection/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<MovieDto>> GetMovieById(int id)
+        public async Task<ActionResult<MovieCollectionDto>> GetCollectionById(int id)
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
-
-            var movie = await _movieService.GetMovieByIdAsync(userId.Value, id);
-            if (movie == null) return NotFound();
-
-            return Ok(movie);
+            var collection = await _collectionRepo.GetCollectionByIdAsync(1, id);
+            if (collection == null) return NotFound();
+            return Ok(collection);
         }
 
         // POST api/moviecollection
         [HttpPost]
-        public async Task<ActionResult<MovieDto>> AddMovie([FromBody] AddMovieDto movieDto)
+        public async Task<ActionResult> CreateCollection([FromBody] CreateMovieCollectionDto dto)
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
-
             try
             {
-                await _movieService.AddMovieAsync(userId.Value, movieDto.Barcode);
-                return Ok(new { message = "Movie added successfully to your collection." });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
+                var id = await _collectionRepo.CreateCollectionAsync(1, dto);
+                return Ok(new { message = "Collection created successfully.", collectionId = id });
             }
             catch (Exception)
             {
-                return StatusCode(500, "An error occurred while adding the movie.");
+                return StatusCode(500, "An error occurred while creating the collection.");
             }
         }
 
         // PUT api/moviecollection/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMovie(int id, [FromBody] UpdateMovieDto movieDto)
+        public async Task<IActionResult> UpdateCollection(int id, [FromBody] CreateMovieCollectionDto dto)
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
-
-            try
-            {
-                var updated = await _movieService.UpdateMovieAsync(userId.Value, id, movieDto.Barcode);
-                if (!updated) return NotFound();
-
-                return Ok(new { message = "Movie updated successfully." });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred while updating the movie.");
-            }
+            var updated = await _collectionRepo.UpdateCollectionAsync(1, id, dto);
+            if (!updated) return NotFound();
+            return Ok(new { message = "Collection updated successfully." });
         }
 
         // DELETE api/moviecollection/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMovie(int id)
+        public async Task<IActionResult> DeleteCollection(int id)
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
-
-            var deleted = await _movieService.DeleteMovieAsync(userId.Value, id);
+            var deleted = await _collectionRepo.DeleteCollectionAsync(1, id);
             if (!deleted) return NotFound();
-
             return NoContent();
         }
 
-        private int? GetUserId()
+        // PUT api/moviecollection/{id}/movies/{movieId}
+        [HttpPut("{id}/movies/{movieId}")]
+        public async Task<IActionResult> AddMovieToCollection(int id, int movieId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdClaim, out int id))
-                return id;
-            return null;
+            var added = await _collectionRepo.AddMovieToCollectionAsync(1, id, movieId);
+            if (!added) return NotFound();
+            return Ok(new { message = "Movie added to collection successfully." });
+        }
+
+        // DELETE api/moviecollection/{id}/movies/{movieId}
+        [HttpDelete("{id}/movies/{movieId}")]
+        public async Task<IActionResult> RemoveMovieFromCollection(int id, int movieId)
+        {
+            var removed = await _collectionRepo.RemoveMovieFromCollectionAsync(1, id, movieId);
+            if (!removed) return NotFound();
+            return NoContent();
         }
     }
 }

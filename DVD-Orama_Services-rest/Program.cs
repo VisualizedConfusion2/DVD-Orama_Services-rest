@@ -25,8 +25,8 @@ namespace DVD_Orama_Services_rest
                 options.UseSqlServer(Secrets.ConnectionString));
 
             // DI
-            //builder.Services.AddScoped<IMovieCollectionService, MovieCollectionService>();
-            //builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IMovieRepo, MovieRepo>();
+            builder.Services.AddScoped<IMovieCollectionRepo, MovieCollectionRepo>();
             builder.Services.AddSingleton<IUserRepo, UserRepo>();
 
             // JWT Authentication

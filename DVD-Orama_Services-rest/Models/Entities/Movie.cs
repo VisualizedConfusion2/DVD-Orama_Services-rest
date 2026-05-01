@@ -5,15 +5,12 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int Duration { get; set; } //stored in seconds
-        public int PublicationYear { get; set; } 
+        public int Duration { get; set; }
+        public int PublicationYear { get; set; }
         public string PosterUrl { get; set; } = string.Empty;
-        public List<string> Genres { get; set; } 
-        public List<string> Actors { get; set; } //In a more complete edition of this product you might have an actor class
-        public List<StreamingLocation> StreamingServices { get; set; } //Could also have been an enum
-        public List<long> EANs { get; set; }
-
-
-
+        public List<string> Genres { get; set; } = new();
+        public List<string> Actors { get; set; } = new();
+        public List<StreamingLocation> StreamingServices { get; set; } = new();
+        public List<long> EANs { get; set; } = new();
     }
 }
