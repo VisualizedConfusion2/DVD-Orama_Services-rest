@@ -91,3 +91,9 @@ Create Table UserMovieCollectionMap(
     FOREIGN KEY (MovieCollectionId) REFERENCES MovieCollections(MovieCollectionId),
     FOREIGN KEY (RoleId) REFERENCES Roles(RoleId),
 );
+
+-- Seed roles
+INSERT INTO Roles (RoleName) VALUES ('Owner');    -- RoleId 1: owns collection, full control including delete
+INSERT INTO Roles (RoleName) VALUES ('Co-Owner'); -- RoleId 2: invite, add/remove/edit movies, cannot delete collection
+INSERT INTO Roles (RoleName) VALUES ('Admin');    -- RoleId 3: add/remove/edit movies only
+INSERT INTO Roles (RoleName) VALUES ('Viewer');   -- RoleId 4: read-only access
