@@ -2,8 +2,8 @@
 {
     public class StreamingLocation
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public int StreamingServiceId { get; set; }
+        public string StreamingServiceName { get; set; } = string.Empty;
         public string URL { get; set; } = string.Empty;
         public int MovieId { get; set; }
     }

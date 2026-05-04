@@ -32,10 +32,10 @@ namespace DVD_Orama_Services_rest.Repos
                         .Where(m => m.MovieCollectionId == c.Id)
                         .Join(_context.Movies,
                             m => m.MovieId,
-                            movie => movie.Id,
+                            movie => movie.MovieId,
                             (m, movie) => new MovieDto
                             {
-                                Id = movie.Id,
+                                MovieId = movie.MovieId,
                                 Title = movie.Title,
                                 PosterUrl = movie.PosterUrl,
                                 PublicationYear = movie.PublicationYear
@@ -62,10 +62,10 @@ namespace DVD_Orama_Services_rest.Repos
                         .Where(m => m.MovieCollectionId == c.Id)
                         .Join(_context.Movies,
                             m => m.MovieId,
-                            movie => movie.Id,
+                            movie => movie.MovieId,
                             (m, movie) => new MovieDto
                             {
-                                Id = movie.Id,
+                                MovieId = movie.MovieId,
                                 Title = movie.Title,
                                 PosterUrl = movie.PosterUrl,
                                 PublicationYear = movie.PublicationYear

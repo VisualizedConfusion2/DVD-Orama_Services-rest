@@ -10,6 +10,12 @@ namespace DVD_Orama_Services_rest.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Movie> Movies { get; set; }
+        public DbSet<MoviesActorsMap> MoviesActorsMap { get; set; }
+        public DbSet<Actor> Actors { get; set; }
+        public DbSet<Genre> Genres { get; set; }
+        public DbSet<MovieEAN> MovieEAN { get; set; }
+        public DbSet<MoviesGenresMap> MoviesGenresMap { get; set; }
+        public DbSet<StreamingLocation> StreamingLocations { get; set; }
         public DbSet<MovieCollection> MovieCollections { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserMovieCollectionMap> UserMovieCollectionMap { get; set; }
@@ -29,7 +35,7 @@ namespace DVD_Orama_Services_rest.Data
                 .Ignore(m => m.Actors)
                 .Ignore(m => m.Genres)
                 .Ignore(m => m.EANs)
-                .Ignore(m => m.StreamingServices);
+                .Ignore(m => m.StreamingLocations);
 
             // Ignore Movies navigation on MovieCollection to prevent EF adding MovieCollectionId FK
             modelBuilder.Entity<MovieCollection>()
@@ -41,12 +47,29 @@ namespace DVD_Orama_Services_rest.Data
 
             // Map correct PK column name
             modelBuilder.Entity<Movie>()
-                .Property(m => m.Id)
+                .Property(m => m.MovieId)
                 .HasColumnName("MovieId");
 
             modelBuilder.Entity<MovieCollection>()
                 .Property(c => c.Id)
                 .HasColumnName("MovieCollectionId");
+
+            modelBuilder.Entity<MovieEAN>()
+                .HasKey(e => e.EAN);
+            modelBuilder.Entity<StreamingLocation>()
+                .HasKey(e => e.StreamingServiceId);
+
+            modelBuilder.Entity<MoviesActorsMap>()
+                .HasKey(x => new { x.MovieId, x.ActorId });
+
+            modelBuilder.Entity<MoviesGenresMap>()
+                .HasKey(x => new { x.MovieId, x.GenreId });
+
+            modelBuilder.Entity<MovieCollectionsMoviesMap>()
+                .HasKey(x => new { x.MovieId, x.MovieCollectionId });
+
+            modelBuilder.Entity<UserMovieCollectionMap>()
+                .HasKey(x => new { x.UserId, x.MovieCollectionId });
         }
         //public DbSet<User> Users => Set<User>();
         //public DbSet<MovieCollectionItem> MovieCollection => Set<MovieCollectionItem>();

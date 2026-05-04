@@ -23,7 +23,7 @@ Create Table Actors(
     Name    NVARCHAR(255) NOT NULL
 );
 
-Create Table MoviesActorMap(
+Create Table MoviesActorsMap(
     ActorId INT NOT NULL,
     MovieId INT NOT NULL,
     FOREIGN KEY (ActorId) REFERENCES Actors(ActorId) ON DELETE CASCADE,

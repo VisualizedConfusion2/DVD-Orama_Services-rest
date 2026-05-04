@@ -17,27 +17,87 @@ namespace DVD_Orama_Services_rest.Repos
 
         public async Task<List<MovieDto>> GetAllMoviesAsync()
         {
-            return await _context.Movies
+            var movies = await _context.Movies
                 .Select(m => new MovieDto
                 {
-                    Id = m.Id,
+                    MovieId = m.MovieId,
                     Title = m.Title,
+                    Description = m.Description,
+                    Duration = m.Duration,
+                    PublicationYear = m.PublicationYear,
                     PosterUrl = m.PosterUrl,
-                    PublicationYear = m.PublicationYear
+                    Actors = _context.MoviesActorsMap
+                        .Where(map => map.MovieId == m.MovieId)
+                        .Join(_context.Actors,
+                            map => map.ActorId,
+                            actor => actor.ActorId,
+                            (map, actor) => actor.Name)
+                        .ToList(),
+                    Genres = _context.MoviesGenresMap
+                        .Where(map => map.MovieId == m.MovieId)
+                        .Join(_context.Genres,
+                            map => map.GenreId,
+                            genre => genre.GenreId,
+                            (map, genre) => genre.GenreName)
+                        .ToList(),
+                    EANs = _context.MovieEAN
+                        .Where(e => e.MovieId == m.MovieId)
+                        .Select(e => e.EAN)
+                        .ToList(),
+                    StreamingLocations = _context.StreamingLocations
+                        .Where(s => s.MovieId == m.MovieId)
+                        .Select(s => new StreamingLocation
+                        {
+                            StreamingServiceId = s.StreamingServiceId,
+                            StreamingServiceName = s.StreamingServiceName,
+                            URL = s.URL
+                        })
+                        .ToList()
                 })
                 .ToListAsync();
+
+            return movies;
         }
 
         public async Task<MovieDto?> GetMovieByIdAsync(int movieId)
         {
             return await _context.Movies
-                .Where(m => m.Id == movieId)
+                .Where(m => m.MovieId == movieId)
                 .Select(m => new MovieDto
                 {
-                    Id = m.Id,
+                    MovieId = m.MovieId,
                     Title = m.Title,
+                    Description = m.Description,
+                    Duration = m.Duration,
+                    PublicationYear = m.PublicationYear,
                     PosterUrl = m.PosterUrl,
-                    PublicationYear = m.PublicationYear
+                    Actors = _context.MoviesActorsMap
+                        .Where(map => map.MovieId == m.MovieId)
+                        .Join(_context.Actors,
+                            map => map.ActorId,
+                            actor => actor.ActorId,
+                            (map, actor) => actor.Name)
+                        .ToList(),
+                    Genres = _context.MoviesGenresMap
+                        .Where(map => map.MovieId == m.MovieId)
+                        .Join(_context.Genres,
+                            map => map.GenreId,
+                            genre => genre.GenreId,
+                            (map, genre) => genre.GenreName)
+                        .ToList(),
+                    EANs = _context.MovieEAN
+                        .Where(e => e.MovieId == m.MovieId)
+                        .Select(e => e.EAN)
+                        .ToList(),
+                    StreamingLocations = _context.StreamingLocations
+                        .Where(s => s.MovieId == m.MovieId)
+                        .Select(s => new StreamingLocation
+                        {
+                            StreamingServiceId = s.StreamingServiceId,
+                            StreamingServiceName = s.StreamingServiceName,
+                            URL = s.URL
+                        })
+                        .ToList()
                 })
                 .FirstOrDefaultAsync();
         }
@@ -54,7 +114,7 @@ namespace DVD_Orama_Services_rest.Repos
             };
             _context.Movies.Add(movie);
             await _context.SaveChangesAsync();
-            return movie.Id;
+            return movie.MovieId;
         }
 
         public async Task<bool> UpdateMovieAsync(int movieId, CreateMovieDto dto)

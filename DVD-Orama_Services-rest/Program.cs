@@ -20,6 +20,17 @@ namespace DVD_Orama_Services_rest
             // Controllers
             builder.Services.AddControllers();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin();
+                    policy.AllowAnyMethod();
+                    policy.AllowAnyHeader();
+                });
+            });
+
+
             // Database
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(Secrets.ConnectionString));
@@ -78,11 +89,12 @@ namespace DVD_Orama_Services_rest
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
+            app.UseCors("AllowAll");
 
             app.UseAuthentication(); // Must come before UseAuthorization
             app.UseAuthorization();
