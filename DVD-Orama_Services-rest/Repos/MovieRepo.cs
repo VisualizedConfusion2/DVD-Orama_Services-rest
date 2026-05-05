@@ -104,17 +104,96 @@ namespace DVD_Orama_Services_rest.Repos
 
         public async Task<int> CreateMovieAsync(CreateMovieDto dto)
         {
-            var movie = new Movie
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                Title = dto.Title,
-                Description = dto.Description,
-                Duration = dto.Duration,
-                PublicationYear = dto.PublicationYear,
-                PosterUrl = dto.PosterUrl
-            };
-            _context.Movies.Add(movie);
-            await _context.SaveChangesAsync();
-            return movie.MovieId;
+                // 1. Create Movie
+                var movie = new Movie
+                {
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    Duration = dto.Duration,
+                    PublicationYear = dto.PublicationYear,
+                    PosterUrl = dto.PosterUrl
+                };
+
+                _context.Movies.Add(movie);
+                await _context.SaveChangesAsync(); // ensures MovieId is generated
+
+                // 2. ACTORS
+                foreach (var actorName in dto.Actors.Distinct())
+                {
+                    var actor = await _context.Actors
+                        .FirstOrDefaultAsync(a => a.Name == actorName);
+
+                    if (actor == null)
+                    {
+                        actor = new Actor { Name = actorName };
+                        _context.Actors.Add(actor);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    _context.MoviesActorsMap.Add(new MoviesActorsMap
+                    {
+                        MovieId = movie.MovieId,
+                        ActorId = actor.ActorId
+                    });
+                }
+
+                // 3. GENRES
+                foreach (var genreName in dto.Genres.Distinct())
+                {
+                    var genre = await _context.Genres
+                        .FirstOrDefaultAsync(g => g.GenreName == genreName);
+
+                    if (genre == null)
+                    {
+                        genre = new Genre { GenreName = genreName };
+                        _context.Genres.Add(genre);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    _context.MoviesGenresMap.Add(new MoviesGenresMap
+                    {
+                        MovieId = movie.MovieId,
+                        GenreId = genre.GenreId
+                    });
+                }
+
+                // 4. EANs
+                foreach (var ean in dto.EANs.Distinct())
+                {
+                    _context.MovieEAN.Add(new MovieEAN
+                    {
+                        MovieId = movie.MovieId,
+                        EAN = ean
+                    });
+                }
+
+                // 5. Streaming Locations
+                foreach (var s in dto.StreamingLocations)
+                {
+                    _context.StreamingLocations.Add(new StreamingLocation
+                    {
+                        MovieId = movie.MovieId,
+                        StreamingServiceName = s.StreamingServiceName,
+                        URL = s.URL
+                    });
+                }
+
+                // 6. Save everything
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return movie.MovieId;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw new Exception("Failed to create movie", ex);
+            }
         }
 
         public async Task<bool> UpdateMovieAsync(int movieId, CreateMovieDto dto)
