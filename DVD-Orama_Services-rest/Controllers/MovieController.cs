@@ -1,5 +1,6 @@
 ﻿using DVD_Orama_Services_rest.Models.DTOs;
 using DVD_Orama_Services_rest.Repos.Interfaces;
+using DVD_Orama_Services_rest.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DVD_Orama_Services_rest.Controllers
@@ -9,10 +10,12 @@ namespace DVD_Orama_Services_rest.Controllers
     public class MovieController : ControllerBase
     {
         private readonly IMovieRepo _movieRepo;
+        private readonly IMovieService _movieService;
 
-        public MovieController(IMovieRepo movieRepo)
+        public MovieController(IMovieRepo movieRepo, IMovieService movieService)
         {
             _movieRepo = movieRepo;
+            _movieService = movieService;
         }
 
         // GET api/movie
@@ -34,19 +37,19 @@ namespace DVD_Orama_Services_rest.Controllers
 
         // POST api/movie
         [HttpPost]
-        public async Task<ActionResult> CreateMovie([FromBody] CreateMovieDto dto)
+        public async Task<ActionResult> CreateMovie(CreateMovieDto dto)
         {
             try
             {
-                var id = await _movieRepo.CreateMovieAsync(dto);
-                return Ok(new { message = "Movie created successfully.", movieId = id });
+                var id = await _movieService.UpsertMovieAsync(dto);
+
+                return Ok(new { movieId = id });
             }
             catch (Exception)
             {
                 return StatusCode(500, "An error occurred while creating the movie.");
             }
         }
-
         // PUT api/movie/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMovie(int id, [FromBody] CreateMovieDto dto)

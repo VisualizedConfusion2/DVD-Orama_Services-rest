@@ -104,110 +104,61 @@ namespace DVD_Orama_Services_rest.Repos
 
         public async Task<int> CreateMovieAsync(CreateMovieDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
+            var movie = new Movie
             {
-                // 1. Create Movie
-                var movie = new Movie
-                {
-                    Title = dto.Title,
-                    Description = dto.Description,
-                    Duration = dto.Duration,
-                    PublicationYear = dto.PublicationYear,
-                    PosterUrl = dto.PosterUrl
-                };
+                Title = dto.Title,
+                Description = dto.Description,
+                Duration = dto.Duration,
+                PublicationYear = dto.PublicationYear,
+                PosterUrl = dto.PosterUrl
+            };
 
-                _context.Movies.Add(movie);
-                await _context.SaveChangesAsync(); // ensures MovieId is generated
+            _context.Movies.Add(movie);
+            await _context.SaveChangesAsync(); // get MovieId
 
-                // 2. ACTORS
-                foreach (var actorName in dto.Actors.Distinct())
-                {
-                    var actor = await _context.Actors
-                        .FirstOrDefaultAsync(a => a.Name == actorName);
+            await SyncMovieActorsAsync(movie.MovieId, dto.Actors);
+            await SyncMovieGenresAsync(movie.MovieId, dto.Genres);
+            await SyncMovieEansAsync(movie.MovieId, dto.EANs);
+            await SyncMovieStreamingAsync(movie.MovieId, dto.StreamingLocations);
 
-                    if (actor == null)
-                    {
-                        actor = new Actor { Name = actorName };
-                        _context.Actors.Add(actor);
-                        await _context.SaveChangesAsync();
-                    }
+            await _context.SaveChangesAsync();
 
-                    _context.MoviesActorsMap.Add(new MoviesActorsMap
-                    {
-                        MovieId = movie.MovieId,
-                        ActorId = actor.ActorId
-                    });
-                }
-
-                // 3. GENRES
-                foreach (var genreName in dto.Genres.Distinct())
-                {
-                    var genre = await _context.Genres
-                        .FirstOrDefaultAsync(g => g.GenreName == genreName);
-
-                    if (genre == null)
-                    {
-                        genre = new Genre { GenreName = genreName };
-                        _context.Genres.Add(genre);
-                        await _context.SaveChangesAsync();
-                    }
-
-                    _context.MoviesGenresMap.Add(new MoviesGenresMap
-                    {
-                        MovieId = movie.MovieId,
-                        GenreId = genre.GenreId
-                    });
-                }
-
-                // 4. EANs
-                foreach (var ean in dto.EANs.Distinct())
-                {
-                    _context.MovieEAN.Add(new MovieEAN
-                    {
-                        MovieId = movie.MovieId,
-                        EAN = ean
-                    });
-                }
-
-                // 5. Streaming Locations
-                foreach (var s in dto.StreamingLocations)
-                {
-                    _context.StreamingLocations.Add(new StreamingLocation
-                    {
-                        MovieId = movie.MovieId,
-                        StreamingServiceName = s.StreamingServiceName,
-                        URL = s.URL
-                    });
-                }
-
-                // 6. Save everything
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                return movie.MovieId;
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("Failed to create movie", ex);
-            }
+            return movie.MovieId;
         }
 
         public async Task<bool> UpdateMovieAsync(int movieId, CreateMovieDto dto)
         {
-            var movie = await _context.Movies.FindAsync(movieId);
-            if (movie == null) return false;
+            var movie = await _context.Movies
+                .FirstOrDefaultAsync(m => m.MovieId == movieId);
 
-            movie.Title = dto.Title;
-            movie.Description = dto.Description;
-            movie.Duration = dto.Duration;
-            movie.PublicationYear = dto.PublicationYear;
-            movie.PosterUrl = dto.PosterUrl;
+            if (movie == null)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(dto.Title))
+                movie.Title = dto.Title;
+
+            if (!string.IsNullOrWhiteSpace(dto.Description))
+                movie.Description = dto.Description;
+
+            if (!string.IsNullOrWhiteSpace(dto.PosterUrl))
+                movie.PosterUrl = dto.PosterUrl;
+
+            if (dto.Duration > 0)
+                movie.Duration = dto.Duration;
+
+            if (dto.PublicationYear > 0)
+                movie.PublicationYear = dto.PublicationYear;
+
+            await SyncMovieActorsAsync(movieId, dto.Actors);
+
+            await SyncMovieGenresAsync(movieId, dto.Genres);
+
+            await SyncMovieEansAsync(movieId, dto.EANs);
+
+            await SyncMovieStreamingAsync(movieId, dto.StreamingLocations);
 
             await _context.SaveChangesAsync();
+
             return true;
         }
 
@@ -219,6 +170,183 @@ namespace DVD_Orama_Services_rest.Repos
             _context.Movies.Remove(movie);
             await _context.SaveChangesAsync();
             return true;
+        }
+        public async Task<List<int>> SearchMoviesAsync(MovieSearchDto dto)
+        {
+            var query = _context.Movies.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(dto.Title))
+            {
+                query = query.Where(m => m.Title.Contains(dto.Title));
+            }
+
+            if (dto.PublicationYear.HasValue)
+            {
+                query = query.Where(m => m.PublicationYear == dto.PublicationYear);
+            }
+
+            if (dto.Genres?.Any() == true)
+            {
+                query = query.Where(m =>
+                    _context.MoviesGenresMap
+                        .Where(x => x.MovieId == m.MovieId)
+                        .Join(_context.Genres,
+                            x => x.GenreId,
+                            g => g.GenreId,
+                            (x, g) => g.GenreName)
+                        .Any(g => dto.Genres.Contains(g))
+                );
+            }
+
+            if (dto.Actors?.Any() == true)
+            {
+                query = query.Where(m =>
+                    _context.MoviesActorsMap
+                        .Where(x => x.MovieId == m.MovieId)
+                        .Join(_context.Actors,
+                            x => x.ActorId,
+                            a => a.ActorId,
+                            (x, a) => a.Name)
+                        .Any(a => dto.Actors.Contains(a))
+                );
+            }
+
+            if (dto.StreamingServices?.Any() == true)
+            {
+                query = query.Where(m =>
+                    _context.StreamingLocations
+                        .Where(s => s.MovieId == m.MovieId)
+                        .Any(s => dto.StreamingServices.Contains(s.StreamingServiceName))
+                );
+            }
+
+            return await query
+                .Select(m => m.MovieId)
+                .ToListAsync();
+        }
+        private async Task SyncMovieGenresAsync(int movieId, List<string>? genres)
+        {
+            if (genres == null)
+                return;
+
+            var clean = genres
+                .Where(g => !string.IsNullOrWhiteSpace(g))
+                .Select(g => g.Trim())
+                .Distinct()
+                .ToList();
+
+            foreach (var name in clean)
+            {
+                var genre = await _context.Genres
+                    .FirstOrDefaultAsync(g => g.GenreName == name);
+
+                if (genre == null)
+                {
+                    genre = new Genre { GenreName = name };
+                    _context.Genres.Add(genre);
+                    await _context.SaveChangesAsync();
+                }
+
+                var exists = await _context.MoviesGenresMap
+                    .AnyAsync(x => x.MovieId == movieId && x.GenreId == genre.GenreId);
+
+                if (!exists)
+                {
+                    _context.MoviesGenresMap.Add(new MoviesGenresMap
+                    {
+                        MovieId = movieId,
+                        GenreId = genre.GenreId
+                    });
+                }
+            }
+        }
+        private async Task SyncMovieEansAsync(int movieId, List<long>? eans)
+        {
+            if (eans == null)
+                return;
+
+            var clean = eans
+                .Where(e => e > 0)
+                .Distinct()
+                .ToList();
+
+            foreach (var ean in clean)
+            {
+                var exists = await _context.MovieEAN
+                    .AnyAsync(x => x.MovieId == movieId && x.EAN == ean);
+
+                if (!exists)
+                {
+                    _context.MovieEAN.Add(new MovieEAN
+                    {
+                        MovieId = movieId,
+                        EAN = ean
+                    });
+                }
+            }
+        }
+        private async Task SyncMovieStreamingAsync(int movieId, List<StreamingLocation>? streaming)
+        {
+            if (streaming == null)
+                return;
+
+            var clean = streaming
+                .Where(s =>
+                    s != null &&
+                    !string.IsNullOrWhiteSpace(s.StreamingServiceName) &&
+                    !string.IsNullOrWhiteSpace(s.URL))
+                .Select(s => new StreamingLocation
+                {
+                    StreamingServiceName = s.StreamingServiceName.Trim(),
+                    URL = s.URL.Trim()
+                })
+                .ToList();
+
+            _context.StreamingLocations.RemoveRange(
+                _context.StreamingLocations.Where(x => x.MovieId == movieId));
+
+            _context.StreamingLocations.AddRange(clean.Select(s => new StreamingLocation
+            {
+                MovieId = movieId,
+                StreamingServiceName = s.StreamingServiceName,
+                URL = s.URL
+            }));
+        }
+        private async Task SyncMovieActorsAsync(int movieId, List<string>? actors)
+        {
+            if (actors == null)
+                return;
+
+            var clean = actors
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Select(a => a.Trim())
+                .Distinct()
+                .ToList();
+
+            foreach (var name in clean)
+            {
+                var actor = await _context.Actors
+                    .FirstOrDefaultAsync(a => a.Name == name);
+
+                if (actor == null)
+                {
+                    actor = new Actor { Name = name };
+                    _context.Actors.Add(actor);
+                    await _context.SaveChangesAsync();
+                }
+
+                var exists = await _context.MoviesActorsMap
+                    .AnyAsync(x => x.MovieId == movieId && x.ActorId == actor.ActorId);
+
+                if (!exists)
+                {
+                    _context.MoviesActorsMap.Add(new MoviesActorsMap
+                    {
+                        MovieId = movieId,
+                        ActorId = actor.ActorId
+                    });
+                }
+            }
         }
     }
 }
