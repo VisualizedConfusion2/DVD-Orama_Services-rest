@@ -146,7 +146,7 @@ namespace DVD_Orama_Services_rest.Repos
             if (dto.Duration > 0)
                 movie.Duration = dto.Duration;
 
-            if (dto.PublicationYear > 0)
+            if (dto.PublicationYear > 1888 )
                 movie.PublicationYear = dto.PublicationYear;
 
             await SyncMovieActorsAsync(movieId, dto.Actors);
