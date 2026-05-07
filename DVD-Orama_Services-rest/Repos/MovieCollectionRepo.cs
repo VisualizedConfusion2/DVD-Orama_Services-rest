@@ -119,9 +119,19 @@ namespace DVD_Orama_Services_rest.Repos
             var collection = await _context.MovieCollections.FindAsync(collectionId);
             if (collection == null) return false;
 
+            // 1. Remove movie-collection movie mappings first
+            var movieMappings = _context.MovieCollectionsMoviesMap
+                .Where(m => m.MovieCollectionId == collectionId);
+            _context.MovieCollectionsMoviesMap.RemoveRange(movieMappings);
+
+            // 2. Remove the user-collection map row
             _context.UserMovieCollectionMap.Remove(map);
+            await _context.SaveChangesAsync(); // FK references to MovieCollection are now gone
+
+            // 3. Now it's safe to delete the collection itself
             _context.MovieCollections.Remove(collection);
             await _context.SaveChangesAsync();
+
             return true;
         }
 
