@@ -2,6 +2,6 @@
 {
     public class AddMovieDto
     {
-        public string Barcode { get; set; } = string.Empty;
+        public int MovieId { get; set; }
     }
 }

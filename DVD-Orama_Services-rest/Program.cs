@@ -1,4 +1,7 @@
 using DVD_Orama_Services_rest.Data;
+using DVD_Orama_Services_rest.Repos;
+using DVD_Orama_Services_rest.Repos.Interfaces;
+using DVD_Orama_Services_rest.Models.Entities;
 using DVD_Orama_Services_rest.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +20,26 @@ namespace DVD_Orama_Services_rest
             // Controllers
             builder.Services.AddControllers();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin();
+                    policy.AllowAnyMethod();
+                    policy.AllowAnyHeader();
+                });
+            });
+
+
             // Database
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Secrets.ConnectionString));
 
             // DI
-            builder.Services.AddScoped<IMovieCollectionService, MovieCollectionService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IMovieRepo, MovieRepo>();
+            builder.Services.AddScoped<IMovieCollectionRepo, MovieCollectionRepo>();
+            builder.Services.AddSingleton<IUserRepo, UserRepo>();
+            builder.Services.AddScoped<IMovieService, MovieService>();
 
             // JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"]!;
@@ -74,11 +90,12 @@ namespace DVD_Orama_Services_rest
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
+            app.UseCors("AllowAll");
 
             app.UseAuthentication(); // Must come before UseAuthorization
             app.UseAuthorization();

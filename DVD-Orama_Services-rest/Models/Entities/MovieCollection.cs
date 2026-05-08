@@ -1,13 +1,14 @@
 ﻿namespace DVD_Orama_Services_rest.Models.Entities
 {
-    public class MovieCollectionItem
+    public class MovieCollection
     {
         public int Id { get; set; }
-        public string Barcode { get; set; } = string.Empty;
-
-        public int UserId { get; set; }
-        public User User { get; set; } = null!;
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string Name { get; set; } = string.Empty;
+        public int OwnerId { get; set; }
+        public bool IsPublic { get; set; } = false;
+        public List<Movie> Movies { get; set; }
+        public List<int> AdminIds { get; set; }
+        public List<int> RegUserIds { get; set; }
+        public List<int> ViewerIds { get; set; }
     }
 }

@@ -1,8 +1,6 @@
-﻿using DVD_Orama_Services_rest.Models.Entities;
-
-namespace DVD_Orama_Services_rest.Models.DTOs
+﻿namespace DVD_Orama_Services_rest.Models.Entities
 {
-    public class MovieDto
+    public class Movie
     {
         public int MovieId { get; set; }
         public string Title { get; set; } = string.Empty;
