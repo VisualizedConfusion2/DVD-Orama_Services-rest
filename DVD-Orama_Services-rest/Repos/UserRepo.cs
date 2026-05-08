@@ -9,11 +9,12 @@ namespace DVD_Orama_Services_rest.Repos
     {
         private readonly AppDbContext _dbContext;
 
-        public UserRepo() 
+        public UserRepo(AppDbContext context) 
         {
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlServer(Secrets.ConnectionString);
-            _dbContext = new AppDbContext(optionsBuilder.Options);
+            _dbContext = context;
+            //var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            //optionsBuilder.UseSqlServer(builder.Configuration.);
+            //_dbContext = new AppDbContext(optionsBuilder.Options);
         }
 
         public IEnumerable<User> GetAll()
