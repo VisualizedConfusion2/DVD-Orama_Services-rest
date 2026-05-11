@@ -1,4 +1,5 @@
-﻿using DVD_Orama_Services_rest.Models.DTOs;
+﻿using DVD_Orama_Services_rest.Models;
+using DVD_Orama_Services_rest.Models.DTOs;
 
 namespace DVD_Orama_Services_rest.Repos.Interfaces
 {
@@ -11,5 +12,7 @@ namespace DVD_Orama_Services_rest.Repos.Interfaces
         Task<bool> DeleteCollectionAsync(int userId, int collectionId);
         Task<bool> AddMovieToCollectionAsync(int userId, int collectionId, int movieId);
         Task<bool> RemoveMovieFromCollectionAsync(int userId, int collectionId, int movieId);
+        Task<InviteResult> InviteUserToCollectionAsync(int inviterId, int collectionId, int targetUserId, int roleId);
+        Task<int?> GetUserRoleAsync(int userId, int collectionId);
     }
 }
