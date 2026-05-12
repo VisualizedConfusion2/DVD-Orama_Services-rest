@@ -1,7 +1,6 @@
 ﻿using DVD_Orama_Services_rest.Data;
 using DVD_Orama_Services_rest.Models.Entities;
 using DVD_Orama_Services_rest.Repos.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace DVD_Orama_Services_rest.Repos
 {
@@ -9,11 +8,9 @@ namespace DVD_Orama_Services_rest.Repos
     {
         private readonly AppDbContext _dbContext;
 
-        public UserRepo() 
+        public UserRepo(AppDbContext dbContext)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlServer(Secrets.ConnectionString);
-            _dbContext = new AppDbContext(optionsBuilder.Options);
+            _dbContext = dbContext;
         }
 
         public IEnumerable<User> GetAll()

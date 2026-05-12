@@ -51,7 +51,7 @@ namespace DVD_Orama_Services_rest
 
             // Database
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(Secrets.ConnectionString));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // DI
             builder.Services.AddScoped<IMovieRepo, MovieRepo>();
