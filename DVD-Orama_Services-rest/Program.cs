@@ -1,8 +1,11 @@
 using DVD_Orama_Services_rest.Data;
+using DVD_Orama_Services_rest.Middleware;
 using DVD_Orama_Services_rest.Repos;
 using DVD_Orama_Services_rest.Repos.Interfaces;
 using DVD_Orama_Services_rest.Models.Entities;
 using DVD_Orama_Services_rest.Services;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +19,21 @@ namespace DVD_Orama_Services_rest
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Firebase Admin SDK — optional; token verification is skipped if the file is missing
+            try
+            {
+                var firebaseCredPath = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS")
+                                       ?? "firebase-service-account.json";
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = GoogleCredential.FromFile(firebaseCredPath)
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARNING] Firebase Admin not initialised: {ex.Message}");
+            }
 
             // Controllers
             builder.Services.AddControllers();
@@ -97,6 +115,7 @@ namespace DVD_Orama_Services_rest
             //}
             app.UseCors("AllowAll");
 
+            app.UseMiddleware<FirebaseAuthMiddleware>();
             app.UseAuthentication(); // Must come before UseAuthorization
             app.UseAuthorization();
 
