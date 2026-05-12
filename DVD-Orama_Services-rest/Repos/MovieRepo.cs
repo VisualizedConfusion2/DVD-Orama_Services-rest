@@ -171,22 +171,17 @@ namespace DVD_Orama_Services_rest.Repos
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<List<int>> SearchMoviesAsync(MovieSearchDto dto)
+        public async Task<List<MovieDto>> SearchMoviesAsync(MovieSearchDto dto)
         {
             var query = _context.Movies.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(dto.Title))
-            {
                 query = query.Where(m => m.Title.Contains(dto.Title));
-            }
 
             if (dto.PublicationYear.HasValue)
-            {
                 query = query.Where(m => m.PublicationYear == dto.PublicationYear);
-            }
 
             if (dto.Genres?.Any() == true)
-            {
                 query = query.Where(m =>
                     _context.MoviesGenresMap
                         .Where(x => x.MovieId == m.MovieId)
@@ -194,12 +189,9 @@ namespace DVD_Orama_Services_rest.Repos
                             x => x.GenreId,
                             g => g.GenreId,
                             (x, g) => g.GenreName)
-                        .Any(g => dto.Genres.Contains(g))
-                );
-            }
+                        .Any(g => dto.Genres.Contains(g)));
 
             if (dto.Actors?.Any() == true)
-            {
                 query = query.Where(m =>
                     _context.MoviesActorsMap
                         .Where(x => x.MovieId == m.MovieId)
@@ -207,21 +199,23 @@ namespace DVD_Orama_Services_rest.Repos
                             x => x.ActorId,
                             a => a.ActorId,
                             (x, a) => a.Name)
-                        .Any(a => dto.Actors.Contains(a))
-                );
-            }
+                        .Any(a => dto.Actors.Contains(a)));
 
             if (dto.StreamingServices?.Any() == true)
-            {
                 query = query.Where(m =>
                     _context.StreamingLocations
                         .Where(s => s.MovieId == m.MovieId)
-                        .Any(s => dto.StreamingServices.Contains(s.StreamingServiceName))
-                );
-            }
+                        .Any(s => dto.StreamingServices.Contains(s.StreamingServiceName)));
 
+            // Only this part changes
             return await query
-                .Select(m => m.MovieId)
+                .Select(m => new MovieDto
+                {
+                    MovieId = m.MovieId,
+                    Title = m.Title,
+                    PosterUrl = m.PosterUrl,
+                    PublicationYear = m.PublicationYear
+                })
                 .ToListAsync();
         }
         private async Task SyncMovieGenresAsync(int movieId, List<string>? genres)

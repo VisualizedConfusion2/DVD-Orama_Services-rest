@@ -23,7 +23,7 @@ public class MovieService : IMovieService
 
         if (existing.Any())
         {
-            var movieId = existing[0];
+            var movieId = existing[0].MovieId;
             await _movieRepo.UpdateMovieAsync(movieId, dto);
             return movieId;
         }

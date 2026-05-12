@@ -34,6 +34,16 @@ namespace DVD_Orama_Services_rest.Controllers
             if (movie == null) return NotFound();
             return Ok(movie);
         }
+        [HttpGet("search")]
+        public async Task<ActionResult<List<MovieDto>>> SearchMovies([FromQuery] MovieSearchDto dto)
+        {
+            var movies = await _movieRepo.SearchMoviesAsync(dto);
+
+            if (!movies.Any())
+                return NotFound(new { message = "No movies found matching the given criteria." });
+
+            return Ok(movies);
+        }
 
         // POST api/movie
         [HttpPost]
