@@ -209,14 +209,43 @@ namespace DVD_Orama_Services_rest.Repos
 
             // Only this part changes
             return await query
-                .Select(m => new MovieDto
+        .Select(m => new MovieDto
+        {
+            MovieId = m.MovieId,
+            Title = m.Title,
+            Description = m.Description,
+            Duration = m.Duration,
+            PublicationYear = m.PublicationYear,
+            PosterUrl = m.PosterUrl,
+            Actors = _context.MoviesActorsMap
+                .Where(map => map.MovieId == m.MovieId)
+                .Join(_context.Actors,
+                    map => map.ActorId,
+                    actor => actor.ActorId,
+                    (map, actor) => actor.Name)
+                .ToList(),
+            Genres = _context.MoviesGenresMap
+                .Where(map => map.MovieId == m.MovieId)
+                .Join(_context.Genres,
+                    map => map.GenreId,
+                    genre => genre.GenreId,
+                    (map, genre) => genre.GenreName)
+                .ToList(),
+            EANs = _context.MovieEAN
+                .Where(e => e.MovieId == m.MovieId)
+                .Select(e => e.EAN)
+                .ToList(),
+            StreamingLocations = _context.StreamingLocations
+                .Where(s => s.MovieId == m.MovieId)
+                .Select(s => new StreamingLocation
                 {
-                    MovieId = m.MovieId,
-                    Title = m.Title,
-                    PosterUrl = m.PosterUrl,
-                    PublicationYear = m.PublicationYear
+                    StreamingServiceId = s.StreamingServiceId,
+                    StreamingServiceName = s.StreamingServiceName,
+                    URL = s.URL
                 })
-                .ToListAsync();
+                .ToList()
+        })
+        .ToListAsync();
         }
         private async Task SyncMovieGenresAsync(int movieId, List<string>? genres)
         {
