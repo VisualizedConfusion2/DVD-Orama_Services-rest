@@ -492,3 +492,4 @@ $RECYCLE.BIN/
 
 # Firebase service account key
 firebase-service-account.json
+/DVD-Orama_Services-rest/appsettings.json

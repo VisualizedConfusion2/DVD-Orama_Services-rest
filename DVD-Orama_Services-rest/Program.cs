@@ -56,7 +56,7 @@ namespace DVD_Orama_Services_rest
             // DI
             builder.Services.AddScoped<IMovieRepo, MovieRepo>();
             builder.Services.AddScoped<IMovieCollectionRepo, MovieCollectionRepo>();
-            builder.Services.AddSingleton<IUserRepo, UserRepo>();
+            builder.Services.AddScoped<IUserRepo, UserRepo>();
             builder.Services.AddScoped<IMovieService, MovieService>();
 
             // JWT Authentication
