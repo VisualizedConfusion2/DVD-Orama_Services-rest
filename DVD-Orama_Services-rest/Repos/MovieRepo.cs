@@ -182,6 +182,8 @@ namespace DVD_Orama_Services_rest.Repos
                 query = query.Where(m => m.PublicationYear == dto.PublicationYear);
 
             if (dto.Genres?.Any() == true)
+            {
+                var genres = dto.Genres; // extract to local variable
                 query = query.Where(m =>
                     _context.MoviesGenresMap
                         .Where(x => x.MovieId == m.MovieId)
@@ -189,9 +191,12 @@ namespace DVD_Orama_Services_rest.Repos
                             x => x.GenreId,
                             g => g.GenreId,
                             (x, g) => g.GenreName)
-                        .Any(g => dto.Genres.Contains(g)));
+                        .Any(g => genres.Contains(g)));
+            }
 
             if (dto.Actors?.Any() == true)
+            {
+                var actors = dto.Actors; // extract to local variable
                 query = query.Where(m =>
                     _context.MoviesActorsMap
                         .Where(x => x.MovieId == m.MovieId)
@@ -199,14 +204,17 @@ namespace DVD_Orama_Services_rest.Repos
                             x => x.ActorId,
                             a => a.ActorId,
                             (x, a) => a.Name)
-                        .Any(a => dto.Actors.Contains(a)));
+                        .Any(a => actors.Contains(a)));
+            }
 
             if (dto.StreamingServices?.Any() == true)
+            {
+                var services = dto.StreamingServices; // extract to local variable
                 query = query.Where(m =>
                     _context.StreamingLocations
                         .Where(s => s.MovieId == m.MovieId)
-                        .Any(s => dto.StreamingServices.Contains(s.StreamingServiceName)));
-
+                        .Any(s => services.Contains(s.StreamingServiceName)));
+            }
             // Only this part changes
             return await query
         .Select(m => new MovieDto
