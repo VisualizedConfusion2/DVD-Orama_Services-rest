@@ -6,6 +6,10 @@
 # dotenv files
 .env
 
+# Secrets
+Secrets.cs
+**/Secrets.cs
+
 # User-specific files
 *.rsuser
 *.suo
@@ -485,3 +489,6 @@ $RECYCLE.BIN/
 /DVD-Orama_Services-rest/Secrets.cs
 /DVD-Orama_Services-rest/Secrets.cs
 /DVD-Orama_Services-rest/Secrets.cs
+
+# Firebase service account key
+firebase-service-account.json
