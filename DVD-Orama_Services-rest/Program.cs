@@ -58,6 +58,8 @@ namespace DVD_Orama_Services_rest
             builder.Services.AddScoped<IMovieCollectionRepo, MovieCollectionRepo>();
             builder.Services.AddScoped<IUserRepo, UserRepo>();
             builder.Services.AddScoped<IMovieService, MovieService>();
+            builder.Services.AddScoped<IGenreRepo, GenreRepo>();
+            builder.Services.AddScoped<IStreamingServiceRepo, StreamingServiceRepo>();
 
             // JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"]!;

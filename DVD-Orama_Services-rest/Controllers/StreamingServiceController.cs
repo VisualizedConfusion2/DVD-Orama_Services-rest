@@ -1,31 +1,21 @@
-﻿using DVD_Orama_Services_rest.Data;
+﻿using DVD_Orama_Services_rest.Repos.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace DVD_Orama_Services_rest.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class StreamingServiceController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class StreamingServiceController : ControllerBase
+    private readonly IStreamingServiceRepo _streamingServiceRepo;
+
+    public StreamingServiceController(IStreamingServiceRepo streamingServiceRepo)
     {
-        private readonly AppDbContext _context;
+        _streamingServiceRepo = streamingServiceRepo;
+    }
 
-        public StreamingServiceController(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET api/streamingservice
-        [HttpGet]
-        public async Task<ActionResult<List<string>>> GetAllStreamingServices()
-        {
-            var services = await _context.StreamingLocations
-                .Select(s => s.StreamingServiceName)
-                .Distinct()
-                .OrderBy(s => s)
-                .ToListAsync();
-
-            return Ok(services);
-        }
+    [HttpGet]
+    public async Task<ActionResult<List<string>>> GetAllStreamingServices()
+    {
+        var services = await _streamingServiceRepo.GetAllStreamingServicesAsync();
+        return Ok(services);
     }
 }
