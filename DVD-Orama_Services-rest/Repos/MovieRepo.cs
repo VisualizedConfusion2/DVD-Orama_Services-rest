@@ -171,22 +171,19 @@ namespace DVD_Orama_Services_rest.Repos
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<List<int>> SearchMoviesAsync(MovieSearchDto dto)
+        public async Task<List<MovieDto>> SearchMoviesAsync(MovieSearchDto dto)
         {
             var query = _context.Movies.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(dto.Title))
-            {
                 query = query.Where(m => m.Title.Contains(dto.Title));
-            }
 
             if (dto.PublicationYear.HasValue)
-            {
                 query = query.Where(m => m.PublicationYear == dto.PublicationYear);
-            }
 
             if (dto.Genres?.Any() == true)
             {
+                var genres = dto.Genres; // extract to local variable
                 query = query.Where(m =>
                     _context.MoviesGenresMap
                         .Where(x => x.MovieId == m.MovieId)
@@ -194,12 +191,12 @@ namespace DVD_Orama_Services_rest.Repos
                             x => x.GenreId,
                             g => g.GenreId,
                             (x, g) => g.GenreName)
-                        .Any(g => dto.Genres.Contains(g))
-                );
+                        .Any(g => genres.Contains(g)));
             }
 
             if (dto.Actors?.Any() == true)
             {
+                var actors = dto.Actors; // extract to local variable
                 query = query.Where(m =>
                     _context.MoviesActorsMap
                         .Where(x => x.MovieId == m.MovieId)
@@ -207,22 +204,56 @@ namespace DVD_Orama_Services_rest.Repos
                             x => x.ActorId,
                             a => a.ActorId,
                             (x, a) => a.Name)
-                        .Any(a => dto.Actors.Contains(a))
-                );
+                        .Any(a => actors.Contains(a)));
             }
 
             if (dto.StreamingServices?.Any() == true)
             {
+                var services = dto.StreamingServices; // extract to local variable
                 query = query.Where(m =>
                     _context.StreamingLocations
                         .Where(s => s.MovieId == m.MovieId)
-                        .Any(s => dto.StreamingServices.Contains(s.StreamingServiceName))
-                );
+                        .Any(s => services.Contains(s.StreamingServiceName)));
             }
-
+            // Only this part changes
             return await query
-                .Select(m => m.MovieId)
-                .ToListAsync();
+        .Select(m => new MovieDto
+        {
+            MovieId = m.MovieId,
+            Title = m.Title,
+            Description = m.Description,
+            Duration = m.Duration,
+            PublicationYear = m.PublicationYear,
+            PosterUrl = m.PosterUrl,
+            Actors = _context.MoviesActorsMap
+                .Where(map => map.MovieId == m.MovieId)
+                .Join(_context.Actors,
+                    map => map.ActorId,
+                    actor => actor.ActorId,
+                    (map, actor) => actor.Name)
+                .ToList(),
+            Genres = _context.MoviesGenresMap
+                .Where(map => map.MovieId == m.MovieId)
+                .Join(_context.Genres,
+                    map => map.GenreId,
+                    genre => genre.GenreId,
+                    (map, genre) => genre.GenreName)
+                .ToList(),
+            EANs = _context.MovieEAN
+                .Where(e => e.MovieId == m.MovieId)
+                .Select(e => e.EAN)
+                .ToList(),
+            StreamingLocations = _context.StreamingLocations
+                .Where(s => s.MovieId == m.MovieId)
+                .Select(s => new StreamingLocation
+                {
+                    StreamingServiceId = s.StreamingServiceId,
+                    StreamingServiceName = s.StreamingServiceName,
+                    URL = s.URL
+                })
+                .ToList()
+        })
+        .ToListAsync();
         }
         private async Task SyncMovieGenresAsync(int movieId, List<string>? genres)
         {

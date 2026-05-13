@@ -9,6 +9,7 @@ namespace DVD_Orama_Services_rest.Repos.Interfaces
         Task<int> CreateMovieAsync(CreateMovieDto dto);
         Task<bool> UpdateMovieAsync(int movieId, CreateMovieDto dto);
         Task<bool> DeleteMovieAsync(int movieId);
-        Task<List<int>> SearchMoviesAsync(MovieSearchDto dto);
+        Task<List<MovieDto>> SearchMoviesAsync(MovieSearchDto dto);
+
     }
 }
